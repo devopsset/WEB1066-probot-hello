@@ -11,22 +11,22 @@ module.exports = app => {
   const Registry = client.Registry
   const register = new Registry()
   const collectDefaultMetrics = client.collectDefaultMetrics
-  
+
   // Probe every 5th second.
 
-  collectDefaultMetrics({register,
+  collectDefaultMetrics({ register,
     timeout: 5000,
     prefix: 'default_'
   })
-  
+
   // register metrics on startup
   const prom = new client.Summary({
     name: 'builds_duration_ms',
     help: 'The number of builds that have executed',
     maxAgeSeconds: 60, // 1 minute sliding window
-    ageBuckets: 100,   // for 100 builds
+    ageBuckets: 100, // for 100 builds
     labelNames: [
-      'action',  // action
+      'action', // action
       'name',
       'check_run_status',
       'check_run_conclusion',
@@ -35,13 +35,13 @@ module.exports = app => {
     ],
     registers: [register]
   })
-  
+
   router.get('/metrics', (req, res) => {
     app.log('GET -> metrics called.')
     res.set('Content-Type', register.contentType)
     res.end(register.metrics())
   })
-  
+
   // Lets test incrementing the build count
   router.get('/reset', (req, res) => {
     app.log('GET -> /reset.')
@@ -49,7 +49,7 @@ module.exports = app => {
 
     res.send('Counter reset ' + new Date())
   })
-  
+
   // Ping router
   router.get('/ping', (req, res) => {
     res.send('pong')
@@ -76,7 +76,7 @@ module.exports = app => {
       http.get(process.env.PROM_URL)
     }, 300000) // every 5 minutes (300000)
   }
-  
+
   // Your code here
   app.log('Yay, the app was loaded!')
 
@@ -84,7 +84,7 @@ module.exports = app => {
     const issueComment = context.issue({ body: 'Thanks for opening this issue! It worked.' })
     return context.github.issues.createComment(issueComment)
   })
-  
+
   app.on('check_run.completed', async context => {
     app.log('check_run.completed -> called ')
     // app.log(JSON.stringify(context))
@@ -97,7 +97,7 @@ module.exports = app => {
       repository_full_name: context.payload.repository.full_name, // repository.full_name
       repository_name: context.payload.repository.name
     }
-    const duration = new Date(context.payload.check_run.completed_at) - new             Date(context.payload.check_run.started_at)
+    const duration = new Date(context.payload.check_run.completed_at) - new Date(context.payload.check_run.started_at)
 
     app.log('observation.action -> ' + observation.action)
     app.log('observation.name -> ' + observation.name)
